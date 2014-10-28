@@ -21,12 +21,6 @@ void Tracker::setup()
 		console() << "Failed to initialize capture" << std::endl;
 	}
 
-	mApproxEps = 1.0;
-	mCannyThresh = 200;
-
-	mPickedColor = Color8u(255.f * 0.541176f, 255.f * 0.427451f, 255.f * 0.564706f);
-	setTrackingHsv();
-
 	mScaling = 2.5f;
 
 	//this is the 2nd algorithm
@@ -49,65 +43,12 @@ void Tracker::setup()
 	mBlobDetector->create("SimpleBlob");
 }
 
-void Tracker::setTrackingHsv()
-{
-	Color8u col = Color(mPickedColor);
-	Vec3f colorHSV = col.get(CM_HSV);
-	colorHSV.x *= 179;
-	colorHSV.y *= 255;
-	colorHSV.z *= 255;
-
-	mColorMin = cv::Scalar(colorHSV.x - 5, colorHSV.y - 50, colorHSV.z - 50);
-	mColorMax = cv::Scalar(colorHSV.x + 5, 255, 255);
-
-}
-
 void Tracker::mouseDown(Vec2i& mousePos)
 {
-	if (mImage && mImage.getBounds().contains(mousePos)) {
 
-		mPickedColor = mImage.getPixel(mousePos);
-		//console() << "r: " << mPickedColor.r << " g:" << mPickedColor.g << " b: " << mPickedColor.b << std::endl;
-		setTrackingHsv();
-	}
 }
 
 void Tracker::update()
-{
-	if (mCapture && mCapture.checkNewFrame()) {
-		mImage = mCapture.getSurface();
-		mCaptureTex = gl::Texture(mImage);
-
-		// do some CV
-		cv::Mat inputMat(toOcv(mImage));
-
-		cv::resize(inputMat, inputMat, cv::Size(getWindowWidth()/mScaling, getWindowHeight()/mScaling));
-
-		cv::Mat inputHSVMat, frameTresh;
-		cv::cvtColor(inputMat, inputHSVMat, CV_BGR2HSV);
-
-		cv::inRange(inputHSVMat, mColorMin, mColorMax, frameTresh);
-
-		cv::medianBlur(frameTresh, frameTresh, 7);
-
-		cv::Mat cannyMat;
-		cv::Canny(frameTresh, cannyMat, mCannyThresh, mCannyThresh*2.f, 3);
-
-		vector< std::vector<cv::Point> >  contours;
-		cv::findContours(cannyMat, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
-
-		mCenters = vector<cv::Point2f>(contours.size());
-		mRadius = vector<float>(contours.size());
-		for (int i = 0; i < contours.size(); i++)
-		{
-			std::vector<cv::Point> approxCurve;
-			cv::approxPolyDP(contours[i], approxCurve, mApproxEps, true);
-			cv::minEnclosingCircle(approxCurve, mCenters[i], mRadius[i]);
-		}
-	}
-}
-
-void Tracker::update2()
 {
 	if (mCapture && mCapture.checkNewFrame()) {
 		mImage = mCapture.getSurface();
@@ -148,7 +89,7 @@ void Tracker::draw()
 			gl::vertex(center);
 			gl::end();
 
-			//gl::drawStrokedCircle(center, mRadius[i] * mScaling);
+			gl::drawStrokedCircle(center, mRadius[i] * mScaling);
 		}
 	}
 }

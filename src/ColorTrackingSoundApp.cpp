@@ -29,10 +29,6 @@ public:
 	void update();
 	void draw();
 
-	void setTrackingHSV();
-
-	params::InterfaceGl		mParams;
-
 	ParticleSystem ps;
 	Tracker t;
 	Listener list;
@@ -47,10 +43,7 @@ void ColorTrackingSoundApp::setup()
 	setWindowSize(800, 600);
 	mMousePosition = getWindowCenter();
 	mPrevPosition = getWindowCenter();
-	
-	// Setup the parameters
-	mParams = params::InterfaceGl("Parameters", Vec2i(200, 150));
-	mParams.addParam("Picked Color", &t.mPickedColor, "readonly=1");
+
 	t.setup();
 	ps.setup();
 	list.setup();
@@ -66,9 +59,6 @@ void ColorTrackingSoundApp::mouseDown(MouseEvent event)
 {
 	mPrevPosition = mMousePosition;
 	mMousePosition = event.getPos();
-
-	
-
 }
 void ColorTrackingSoundApp::mouseDrag(MouseEvent event)
 {
@@ -87,11 +77,9 @@ void ColorTrackingSoundApp::mouseMove(MouseEvent event)
 	}
 }
 
-
-
 void ColorTrackingSoundApp::update()
 {
-	t.update2();
+	t.update();
 	list.update();
 
 	for (int i = 0; i < t.mCenters.size(); i++)
@@ -108,7 +96,6 @@ void ColorTrackingSoundApp::draw()
 	gl::color(Color::white());
 	t.draw();
 	// Draw the interface
-	//mParams.draw();
 	//ps.draw();
 }
 
